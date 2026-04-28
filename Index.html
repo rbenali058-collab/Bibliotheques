@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Une question pour toi 🌸</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #fce4ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 30% 20%, #f8bbd0 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, #f48fb1 0%, transparent 40%);
+    pointer-events: none;
+  }
+
+  .card {
+    background: white;
+    border-radius: 28px;
+    padding: 48px 36px 40px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(233, 30, 140, 0.15);
+    position: relative;
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .bear {
+    font-size: 80px;
+    display: block;
+    margin-bottom: 8px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .question {
+    font-size: 22px;
+    font-weight: 900;
+    color: #222;
+    margin: 20px 0 36px;
+    line-height: 1.4;
+  }
+
+  .question span {
+    color: #e91e8c;
+  }
+
+  .buttons {
+    position: relative;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-yes {
+    background: #e91e8c;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 18px 52px;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 6px 0 #ad1457;
+    z-index: 2;
+  }
+
+  .btn-yes:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #ad1457; }
+  .btn-yes:active { transform: translateY(3px); box-shadow: 0 3px 0 #ad1457; }
+
+  .btn-no {
+    position: fixed;
+    background: none;
+    border: none;
+    font-size: 17px;
+    font-weight: 700;
+    color: #aaa;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    padding: 10px 16px;
+    transition: left 0.08s, top 0.08s;
+    z-index: 9999;
+    user-select: none;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 20px;
+  }
+
+  /* YAY screen */
+  #yay {
+    display: none;
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  .yay-emoji { font-size: 80px; display: block; margin-bottom: 12px; }
+
+  .yay-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #e91e8c;
+    margin-bottom: 8px;
+  }
+
+  .yay-sub {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .confetti {
+    font-size: 32px;
+    margin: 16px 0;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* floating hearts background */
+  .heart {
+    position: fixed;
+    font-size: 20px;
+    pointer-events: none;
+    animation: floatUp linear infinite;
+    opacity: 0;
+  }
+
+  @keyframes floatUp {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div id="main">
+    <span class="bear">🐱</span>
+    <div class="question">
+      veux-tu venir avec moi<br>à la <span>bibliothèque</span>, Sarah ?
+    </div>
+    <div class="buttons">
+      <button class="btn-yes" onclick="sayYes()">Oui 💖</button>
+      <button class="btn-no" id="noBtn" onmouseenter="runAway()" ontouchstart="runAway()">Non</button>
+    </div>
+    <div class="hint" id="hint">* "Non" semble un peu timide 🐱</div>
+  </div>
+
+  <div id="yay">
+    <span class="yay-emoji">🎉</span>
+    <div class="yay-title">YAY !</div>
+    <div class="confetti">🎊</div>
+    <div class="yay-sub">
+      Sarah a dit <strong>oui</strong> !<br>
+      On se retrouve à la bibliothèque 📚✨
+    </div>
+  </div>
+</div>
+
+<script>
+  var noBtn = document.getElementById('noBtn');
+  var initialized = false;
+  var noX = 0, noY = 0;
+
+  function initNo() {
+    if (initialized) return;
+    initialized = true;
+    var rect = document.getElementById('card').getBoundingClientRect();
+    noX = rect.left + rect.width * 0.65;
+    noY = rect.top + 260;
+    noBtn.style.left = noX + 'px';
+    noBtn.style.top = noY + 'px';
+  }
+
+  window.addEventListener('load', function() {
+    setTimeout(initNo, 600);
+  });
+
+  function runAway() {
+    initNo();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var bw = noBtn.offsetWidth || 60;
+    var bh = noBtn.offsetHeight || 40;
+    var curX = parseFloat(noBtn.style.left) || noX;
+    var curY = parseFloat(noBtn.style.top) || noY;
+    var nx, ny, tries = 0;
+    do {
+      nx = Math.random() * (vw - bw - 20) + 10;
+      ny = Math.random() * (vh - bh - 20) + 10;
+      tries++;
+    } while (Math.sqrt(Math.pow(nx-curX,2)+Math.pow(ny-curY,2)) < 100 && tries < 30);
+    noBtn.style.left = nx + 'px';
+    noBtn.style.top = ny + 'px';
+    document.getElementById('hint').innerText = '"Non" ne veut vraiment pas être cliqué 😅';
+  }
+
+  function sayYes() {
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('yay').style.display = 'block';
+    noBtn.style.display = 'none';
+    launchHearts();
+  }
+
+  function launchHearts() {
+    var emojis = ['💖','💕','✨','🌸','💗','🎉'];
+    for (var i = 0; i < 12; i++) {
+      (function(i) {
+        setTimeout(function() {
+          var h = document.createElement('div');
+          h.className = 'heart';
+          h.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+          h.style.left = Math.random() * 100 + 'vw';
+          h.style.animationDuration = (3 + Math.random() * 3) + 's';
+          h.style.animationDelay = (Math.random() * 1) + 's';
+          h.style.fontSize = (14 + Math.random() * 20) + 'px';
+          document.body.appendChild(h);
+          setTimeout(function() { h.remove(); }, 7000);
+        }, i * 150);
+      })(i);
+    }
+  }
+</script>
+</body>
+</html>
